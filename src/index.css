@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+
+@theme {
+    --color-whiteBox: #eee;
+    --color-blackBox: #555;
+    --color-focus: rgba(192, 192, 192, 0.678);
+    --color-primary: #312E2B;
+    --color-secondary: #F5F3F0;
+    --color-black: #262522;
+
+    --font-primary: "Montserrat", sans-serif;
+}
+
+html {
+    @apply h-[100%];
+}
+ 
+body {
+    @apply flex justify-center items-center h-[100%]  bg-primary text-secondary font-primary;
+}
+
+.dragging {
+    opacity: 0 !important;
+    cursor: grabbing !important;
+}
+
+.target-dragging {
+    @apply border-[4px] border-focus cursor-grabbing;
+}

@@ -1,0 +1,17 @@
+{
+  "default": {
+    "white": "#eee",
+    "black": "#555",
+    "focus": "rgba(192,192,192,0.678)"
+  },
+  "dark": {
+    "white": "#fafafa",
+    "black": "#222",
+    "focus": "#888"
+  },
+  "blue": {
+    "white": "#d0e7ff",
+    "black": "#0a1f3f",
+    "focus": "#1a3b6f"
+  }
+}
