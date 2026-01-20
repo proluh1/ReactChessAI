@@ -5,7 +5,7 @@ import IconSurrender from "../assets/surrender.svg?react";
 import IconSuggest from "../assets/suggest.svg?react";
 
 const SidebarInfo = memo(
-  ({ className, startGame, gameState, game }: { className: string; startGame: () => void, gameState: GameState, game: Game }) => {
+  ({ className, startGame, gameState, game }: { className: string; startGame: () => void, gameState: GameState, game: Game | null }) => {
 
     const moveHistoryRef = useRef<HTMLDivElement>(null);
 
@@ -24,7 +24,7 @@ const SidebarInfo = memo(
           {gameState === GameState.PLAYING && (
             <div ref={moveHistoryRef} className="h-4/7  flex flex-col justify-start bg-blackBox/5 overflow-y-scroll">
               <ul>
-                {game.movesHistory.map((move, index) => (
+                {game && game.movesHistory.map((move, index) => (
                   <li key={index} className="text-secondary/80 mb-2 text-[.9rem] px-4 py-1 flex justify-between even:bg-blackBox/20">
                     <span className="font-bold w-1/4">{index+1}. </span>
                     <span className="w-1/2">{move.notation.split("-")[0]}</span>
