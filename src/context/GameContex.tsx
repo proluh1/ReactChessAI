@@ -1,23 +1,31 @@
-import {  createContext, useRef } from "react";
+import {  createContext, useContext, useRef } from "react";
 import type Game from "../engine/Game";
 import type { Coordinate } from "../domain/entitites/Piece";
 
-export const MoveOriginContext = createContext<{
+export const GameContext = createContext<{
   previousCoord: () => Coordinate | null;
   markDrop: () => void;
   consumeDrop: () => boolean;
+  onMove: (id: string, to: Coordinate) => void;
+  startGame: () => void;
 }>({
   previousCoord: () => null,
   markDrop: () => {},
   consumeDrop: () => false,
+  onMove: () => undefined,
+  startGame: () => undefined
 });
 
-export function MoveOriginProvider({
+export default function GameProvider({
   children,
   game,
+  onMove,
+  startGame
 }: {
   children: React.ReactNode;
   game: Game | null;
+  onMove: (id: string, to: Coordinate) => void;
+  startGame: () => void;
 }) {
   const dropRef = useRef(false);
 
@@ -37,8 +45,10 @@ export function MoveOriginProvider({
       : null;
 
   return (
-    <MoveOriginContext.Provider value={{ previousCoord, markDrop, consumeDrop }}>
+    <GameContext.Provider value={{ previousCoord, markDrop, consumeDrop, onMove, startGame }}>
       {children}
-    </MoveOriginContext.Provider>
+    </GameContext.Provider>
   );
 }
+
+export const useGameContext = () => useContext(GameContext);

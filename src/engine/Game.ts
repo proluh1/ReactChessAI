@@ -7,6 +7,7 @@ import Piece, {
 } from "../domain/entitites/Piece";
 import { type PlayerController } from "./controller/PlayerController";
 import King from "../domain/entitites/King";
+import { parseNotation } from "../utils/coord";
 export default class Game {
   public board: Board;
   public players: { white: PlayerController; black: PlayerController };
@@ -14,6 +15,7 @@ export default class Game {
   public capturePieces: Piece[];
   public winner!: Color | null;
   public mode: PvMode;
+  public currentPLayer!: PlayerController;
 
   constructor(
     board: Board,
@@ -55,63 +57,13 @@ export default class Game {
       moveNumber: this.getFullMovesCounter(),
       player: this.getCurrentTurn(),
       timestamp: Date.now(),
-      notation: ''
+      notation: parseNotation(box?.coordinate, to, moveResult.type)
     };
     this.addMove(move);
 
+    this.do(moveResult.type, { piece, to, target: moveResult.target });
+    
     const board = this.board;
-    switch (moveResult.type) {
-      case MoveType.NORMAL:
-        if (piece instanceof Pawn) {
-          piece.isDoubleMoveAvailable = false;
-          this.addHalfMove();
-        } else {
-          this.resetHalfMove();
-        }
-        piece.move(to, board);
-        break;
-
-      case MoveType.CAPTURE:
-        if (moveResult.target) {
-          if (piece instanceof Pawn) {
-            piece.isDoubleMoveAvailable = false;
-          }
-          this.resetHalfMove();
-          piece.move(to, board);
-          this.capturePieces.push(moveResult.target);
-        }
-        break;
-
-      case MoveType.DOUBLE_STEP:
-        if (piece instanceof Pawn) {
-          piece.isDoubleMoveAvailable = false;
-          piece.justDoubleMoved = true;
-        }
-        this.resetHalfMove();
-        piece.move(to, board);
-        break;
-
-      case MoveType.EN_PASSANT:
-        if (piece instanceof Pawn && moveResult.target) {
-          piece.moveInPassant(to, board, moveResult.target);
-          this.capturePieces.push(moveResult.target);
-        }
-        this.resetHalfMove();
-        break;
-
-      case MoveType.PROMOTION:
-        if (piece instanceof Pawn) {
-          piece.move(to, board);
-        }
-        this.resetHalfMove();
-        break;
-
-      case MoveType.CASTLING:
-        this.addFullMove();
-        piece.move(to, board);
-        break;
-    }
-
     if (moveResult.type !== MoveType.DOUBLE_STEP) {
       if (board.passedPawn) {
         board.passedPawn = null;
@@ -145,7 +97,6 @@ export default class Game {
     const box = piece.box;
     if (box === null) return { success: false, lastMoveType: null };
 
-
     const move: MoveHistory = {
       piece,
       from: box?.coordinate,
@@ -155,64 +106,12 @@ export default class Game {
       moveNumber: this.getFullMovesCounter(),
       player: this.getCurrentTurn(),
       timestamp: Date.now(),
-      notation: ''
+      notation: parseNotation(box?.coordinate, to, moveResult.type)
     };
     this.addMove(move);
 
     const board = this.board;
-    switch (moveResult.type) {
-      case MoveType.NORMAL:
-        if (piece instanceof Pawn) {
-          piece.isDoubleMoveAvailable = false;
-          this.addHalfMove();
-        } else {
-          this.resetHalfMove();
-        }
-        piece.move(to, board);
-        break;
-
-      case MoveType.CAPTURE:
-        if (moveResult.target) {
-          if (piece instanceof Pawn) {
-            piece.isDoubleMoveAvailable = false;
-          }
-          this.resetHalfMove();
-          piece.move(to, board);
-          this.capturePieces.push(moveResult.target);
-        }
-        break;
-
-      case MoveType.DOUBLE_STEP:
-        if (piece instanceof Pawn) {
-          piece.isDoubleMoveAvailable = false;
-          piece.justDoubleMoved = true;
-        }
-        this.resetHalfMove();
-        piece.move(to, board);
-        break;
-
-      case MoveType.EN_PASSANT:
-        if (piece instanceof Pawn && moveResult.target) {
-          piece.moveInPassant(to, board, moveResult.target);
-          this.capturePieces.push(moveResult.target);
-        }
-        this.resetHalfMove();
-        break;
-
-      case MoveType.PROMOTION:
-        if (piece instanceof Pawn) {
-          piece.move(to, board);
-        }
-        this.resetHalfMove();
-        break;
-
-      case MoveType.CASTLING:
-        this.addFullMove();
-        if (piece instanceof King) {
-          piece.moveCastle(to, board, moveResult.target as Piece);
-        }
-        break;
-    }
+    this.do(moveResult.type, { piece, to, target: moveResult.target });
 
     if (moveResult.type !== MoveType.DOUBLE_STEP) {
       if (board.passedPawn) {
@@ -230,6 +129,63 @@ export default class Game {
     this.addFullMove();
 
     return { success: true, lastMoveType: moveResult.type };
+  }
+
+
+
+  private do(type: MoveType, content: { piece: Piece; to: Coordinate, target?: Piece }) {
+    this.actionList[type](content);
+  }
+
+  private actionList = {
+    [MoveType.NORMAL]: this.do_move.bind(this),
+    [MoveType.CAPTURE]: this.do_moveCapture.bind(this),
+    [MoveType.DOUBLE_STEP]: this.do_move.bind(this),
+    [MoveType.EN_PASSANT]: this.do_moveEnPassant.bind(this),
+    [MoveType.PROMOTION]: this.do_movePromotion.bind(this),
+    [MoveType.CASTLING]: this.do_moveCastling.bind(this),
+  }
+
+  private do_move({ piece, to }: { piece: Piece; to: Coordinate }) {
+    if (piece instanceof Pawn) {
+      piece.isDoubleMoveAvailable = false;
+      this.addHalfMove();
+    } else {
+      this.resetHalfMove();
+    }
+    piece.move(to, this.board);
+  }
+
+  private do_moveCapture({ piece, to, target }: { piece: Piece; to: Coordinate; target?: Piece }) {
+    if (target) {
+      if (piece instanceof Pawn) {
+        piece.isDoubleMoveAvailable = false;
+      }
+      this.resetHalfMove();
+      piece.move(to, this.board);
+      this.capturePieces.push(target);
+    }
+  }
+
+  private do_moveEnPassant({ piece, to, target }: { piece: Piece; to: Coordinate; target?: Piece }) {
+    if (piece instanceof Pawn && target) {
+      piece.moveInPassant(to, this.board, target);
+      this.capturePieces.push(target);
+    }
+    this.resetHalfMove();
+  }
+
+  private do_movePromotion({ piece, to, target }: { piece: Piece; to: Coordinate; target?: Piece }) {
+    if (piece instanceof Pawn) {
+      piece.move(to, this.board);
+    }
+    this.resetHalfMove();
+  }
+
+  private do_moveCastling({ piece, to, target }: { piece: Piece; to: Coordinate; target?: Piece }) {
+    if (piece instanceof King) {
+      piece.moveCastle(to, this.board, target as Piece);
+    }
   }
 
   public addMove(move: MoveHistory) {
@@ -255,8 +211,8 @@ export default class Game {
   }
 
   async playTurn() {
-    const currentPlayer = this.getCurrentPlayerTurn();
-    const move = await currentPlayer.getMove(this.board);
+    const currentPlayerTurn = this.getCurrentPlayerTurn();
+    const move = await currentPlayerTurn.getMove(this.board);
     this.makeMoveByFromTo(move.from, move.to);
   }
 
@@ -294,7 +250,7 @@ export default class Game {
     return this.players.black;
   }
 
-  public getFullMovesCounter():number {
+  public getFullMovesCounter(): number {
     return this.board.fullMoveCounter;
   }
 
@@ -312,7 +268,7 @@ export default class Game {
   }
 }
 
-interface MoveHistory {
+type MoveHistory = {
   from: Coordinate;
   to: Coordinate;
   piece: Piece;
@@ -341,10 +297,9 @@ export enum GameAction {
   MOVE_IA,
   SELECT_MODE,
 }
-
-export type GameState = {
-  game: Game | null;
-  board: Board;
-  lastMoveType: MoveType | null;
-  mode: PvMode | null;
+export enum GameState {
+  IDLE,
+  PLAYING,
+  PAUSED,
+  GAME_OVER
 };

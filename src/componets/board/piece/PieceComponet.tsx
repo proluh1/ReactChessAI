@@ -1,7 +1,7 @@
 import { memo, useRef, useContext, useLayoutEffect } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import type Piece from "../../../domain/entitites/Piece";
-import { MoveOriginContext } from "../../../context/MoveOriginContex";
+import { useGameContext } from "../../../context/GameContex";
 import PieceIcon from "./PieceIcon";
 import type { Coordinate } from "../../../domain/entitites/Piece";
 import useArrow from "../../../hooks/useArrow";
@@ -18,7 +18,7 @@ const PieceComponent = memo(
   }) => {
     const imgRef = useRef<HTMLDivElement>(null);
     const rotation = flipped ? "rotate(180deg)" : "";
-    const { previousCoord, consumeDrop } = useContext(MoveOriginContext);
+    const { previousCoord, consumeDrop } = useGameContext();
     const { handleMouseDown } = useArrow(piece.box?.coordinate as Coordinate);
 
     const { attributes, listeners, setNodeRef, isDragging } = useDraggable({

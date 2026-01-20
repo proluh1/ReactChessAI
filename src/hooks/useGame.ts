@@ -1,6 +1,6 @@
 import { useEffect, useReducer, useState } from "react";
 import  BoardBuilder  from "../engine/BoardBuilder";
-import { GameAction, PvMode } from "../engine/Game";
+import { GameAction, GameState, PvMode } from "../engine/Game";
 import { type Coordinate } from "../domain/entitites/Piece";
 import gameReducer from "./gameReducer";
 import { defaultFen } from "../config/defaultFen.json";
@@ -11,7 +11,8 @@ export function useGame() {
     game: null,
     board: BoardBuilder.fen(defaultFen).build(),
     lastMoveType: null,
-    mode: PvMode.LOCAL
+    mode: PvMode.LOCAL,
+    gameState: GameState.IDLE
   });
   const [isThinking, setIsThinking] = useState(false);
 
@@ -27,14 +28,15 @@ export function useGame() {
     if(isThinking) {
       return
     }
+    if(state.game === null) {
+      startGame();
+    }
     dispatch({ type: GameAction.MOVE, id, to });
   };
 
   const handleMoveIA = (from: Coordinate, to: Coordinate) => {
     dispatch({ type: GameAction.MOVE_IA, from, to });
   };
-
-  
 
   useEffect(() => {
     const { game } = state;

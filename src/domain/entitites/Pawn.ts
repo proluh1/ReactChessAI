@@ -35,7 +35,7 @@ export default class Pawn extends Piece {
     // ===== CAPTURA =====
     if (Math.abs(dx) === 1 && dy === dir) {
       const side = dx === -1 ? "Left" : "Right";
-      let targetBox = this.box.neighbor[`{forward}${side}` as NeighborKey];
+      let targetBox = this.box.neighbor[`${forward}${side}` as NeighborKey];
       if (targetBox === null) return null;
 
       let target = targetBox.piece;

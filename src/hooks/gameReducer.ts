@@ -1,14 +1,24 @@
 import  BoardBuilder  from "../engine/BoardBuilder";
 import HumanPlayer from "../engine/controller/HumanPlayer";
-import { GameAction, PvMode, type GameState } from "../engine/Game";
+import { GameAction, GameState, PvMode } from "../engine/Game";
 import Game from "../engine/Game";
-import { Color } from "../domain/entitites/Piece";
+import { Color, MoveType } from "../domain/entitites/Piece";
 import AIPlayer from "../engine/controller/AIPlayer";
 import { defaultFen } from "../config/defaultFen.json";
+import type Board from "../domain/entitites/Board";
 
-export default function gameReducer(state: GameState, action: any): GameState {
+export type GameProps = {
+  game: Game | null;
+  board: Board;
+  lastMoveType: MoveType | null;
+  mode: PvMode | null;
+  gameState: GameState;
+};
+
+export default function gameReducer(state: GameProps, action: any): GameProps {
   switch (action.type) {
     case GameAction.START: {
+      state.gameState = GameState.PLAYING;
       const board = BoardBuilder.fen(defaultFen).build();
       let game: Game;
       switch (state.mode) {
@@ -32,6 +42,7 @@ export default function gameReducer(state: GameState, action: any): GameState {
             human.color === Color.BLACK ? human : ai,
             state.mode
           );
+          game.currentPLayer = human;
           break;
         }
         default:

@@ -3,7 +3,7 @@ import BoardComponent from "./componets/board/BoardComponent";
 import { useGame } from "./hooks/useGame";
 import SidebarOptions from "./componets/SideBarOptions";
 import useAudio from "./hooks/useAudio";
-import { MoveOriginProvider } from "./context/MoveOriginContex";
+import  GameProvider  from "./context/GameContex";
 import SidebarInfo from "./componets/SideBarInfo";
 
 function App() {
@@ -22,25 +22,25 @@ function App() {
       <SidebarOptions
         className="w-full md:w-[180px] fixed left-0 top-0 bottom-0"
         selectMode={selectMode}
-      ></SidebarOptions>
+      />
 
       <div className="w-full md:w-1/7"></div>
+
       
       {/* Tablero */}
       <div className="w-full p-4 flex justify-center items-center">
-        <MoveOriginProvider game={state.game}>
+        <GameProvider game={state.game} onMove={handleMove} startGame={startGame}>
           <BoardComponent
             className="h-auto w-full max-w-[800px]"
             board={state.board}
             toogleBoard={toogleBoard}
-            onMove={handleMove}
           />
-        </MoveOriginProvider>
+        </GameProvider>
       </div>
 
       {/* SideBar Info*/}
-      <SidebarInfo startGame={startGame} className="w-full md:w-1/3"></SidebarInfo>
-      <div className="md:w-1/6"></div>
+      <SidebarInfo startGame={startGame} gameState={state.gameState} game={state.game} className="w-full md:w-1/2"></SidebarInfo>
+      <div className="md:w-1/5"></div>
     </div>
   );
 }

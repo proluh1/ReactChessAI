@@ -12,12 +12,10 @@ import BoardWrapper from "./BoardWrapper";
 function BoardComponent({
   board,
   className,
-  onMove,
   toogleBoard,
 }: {
   board: Board;
   className?: string;
-  onMove?: (id: string, to: Coordinate) => void;
   toogleBoard: boolean;
 }) {
   const boxComponentWrapper = useRef<HTMLDivElement | null>(null);
@@ -32,7 +30,7 @@ function BoardComponent({
       className={`relative grid grid-rows-8 grid-cols-8 aspect-square select-none ${className}`}
       style={{ transform: toogleBoard ? "rotate(180deg)" : "" }}
     >
-      <BoardDndProvider onMove={onMove}>
+      <BoardDndProvider>
         <ArrowProvider cellSize={cellSize}>
           {board.boxes.map((boxsRow, row) =>
             boxsRow.map((box, col) => {
