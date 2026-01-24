@@ -1,11 +1,13 @@
 import { memo, useEffect, useRef } from "react";
-import Game, { GameState } from "../engine/Game";
+import  { GameState, type MoveHistory } from "../engine/Game";
 import IconUndo from "../assets/undo.svg?react";
 import IconSurrender from "../assets/surrender.svg?react";
 import IconSuggest from "../assets/suggest.svg?react";
 
+type Props = { className: string; startGame: () => void, gameState: GameState, movesHistory: MoveHistory[] | undefined, undoMove: ()=> void, showBestMove: () => void }
+
 const SidebarInfo = memo(
-  ({ className, startGame, gameState, game }: { className: string; startGame: () => void, gameState: GameState, game: Game | null }) => {
+  ({ className, startGame, gameState, movesHistory , undoMove, showBestMove}: Props) => {
 
     const moveHistoryRef = useRef<HTMLDivElement>(null);
 
@@ -16,7 +18,7 @@ const SidebarInfo = memo(
           behavior: "smooth",
         });
       }
-    }, [game?.movesHistory.length]);
+    }, [movesHistory]);
 
     return (
       <aside className={className}>
@@ -24,9 +26,9 @@ const SidebarInfo = memo(
           {gameState === GameState.PLAYING && (
             <div ref={moveHistoryRef} className="h-4/7  flex flex-col justify-start bg-blackBox/5 overflow-y-scroll">
               <ul>
-                {game && game.movesHistory.map((move, index) => (
+                {movesHistory && movesHistory.map((move, index) => (
                   <li key={index} className="text-secondary/80 mb-2 text-[.9rem] px-4 py-1 flex justify-between even:bg-blackBox/20">
-                    <span className="font-bold w-1/4">{index+1}. </span>
+                    <span className="font-bold w-1/4">{index + 1}. </span>
                     <span className="w-1/2">{move.notation.split("-")[0]}</span>
                     <span className="w-1/1">{move.notation.split("-")[1]}</span>
                   </li>
@@ -45,10 +47,10 @@ const SidebarInfo = memo(
                 <button onClick={startGame} className="w-full flex justify-center items-center p-4 text-[1.7rem] font-bold rounded-[8px] bg-gradient-to-b from-white/20 to-primary hover:from-white/40 transition-all duration-300">
                   <IconSurrender fill="white" width={20} height={20} />
                 </button>
-                <button onClick={startGame} className="w-full flex justify-center items-center p-4 text-[1.7rem] font-bold rounded-[8px] bg-gradient-to-b from-white/20 to-primary hover:from-white/40 transition-all duration-300">
+                <button onClick={undoMove} className="w-full flex justify-center items-center p-4 text-[1.7rem] font-bold rounded-[8px] bg-gradient-to-b from-white/20 to-primary hover:from-white/40 transition-all duration-300">
                   <IconUndo fill="white" width={20} height={20} />
                 </button>
-                <button onClick={startGame} className="w-full flex justify-center items-center p-4 text-[1.7rem] font-bold rounded-[8px] bg-gradient-to-b from-white/20 to-primary hover:from-white/40 transition-all duration-300">
+                <button onClick={showBestMove} className="w-full flex justify-center items-center p-4 text-[1.7rem] font-bold rounded-[8px] bg-gradient-to-b from-white/20 to-primary hover:from-white/40 transition-all duration-300">
                   <IconSuggest fill="white" width={25} height={20} />
                 </button>
               </>

@@ -1,44 +1,64 @@
-import { createContext, useCallback, useRef } from "react";
+import { createContext, useCallback, useEffect, useRef } from "react";
 import type { Coordinate } from "../domain/entitites/Piece";
 
 
 export const ArrowContext = createContext<{
   mouseDown: (initial: Coordinate) => void;
-  mouseUp: (last: Coordinate, color:string) => void;
-  clearAllArrows:  () => void
+  mouseUp: (last: Coordinate, color?: string) => void;
+  clearAllArrows: () => void
 }>({
-  mouseDown: () => {},
-  mouseUp: () => {},
-  clearAllArrows: () => {}
+  mouseDown: () => { },
+  mouseUp: () => { },
+  clearAllArrows: () => { }
 });
 
 export function ArrowProvider({
   cellSize,
   children,
+  suggest,
 }: {
   cellSize: number;
   children: React.ReactNode;
+  suggest?: { from: Coordinate, to: Coordinate } | null
 }) {
   const initialState = useRef<Coordinate | null>(null);
   const arrowCanvas = useRef<HTMLCanvasElement | null>(null);
-  
+
 
   const drawArrow = useCallback(
     ({
-      ctx,
-      from,
-      to,
-      withCurve,
-      color,
-      cellSize,
+      initial,
+      last,
+      arrow,
+      color = "rgba(0,0,0, .6)",
     }: {
-      ctx: CanvasRenderingContext2D;
-      from: { px: number; py: number };
-      to: { px: number; py: number };
-      withCurve: boolean;
-      cellSize: number;
-      color: string;
+      initial: Coordinate;
+      last: Coordinate;
+      arrow: HTMLCanvasElement;
+      color?: string;
     }) => {
+      if (initial.x === last.x && initial.y === last.y) return;
+
+      const from = {
+        px: initial.x * cellSize + cellSize / 2,
+        py: initial.y * cellSize + cellSize / 2,
+      };
+      const to = {
+        px: last.x * cellSize + cellSize / 2,
+        py: last.y * cellSize + cellSize / 2,
+      };
+
+      const ctx = arrow.getContext("2d");
+      if (!ctx) return;
+
+      const dx = Math.abs(last.x - initial.x);
+      const dy = Math.abs(last.y - initial.y);
+
+      let withCurve = false;
+      if ((dx === 2 && dy === 1) || (dx === 1 && dy === 2)) {
+        withCurve = true;
+      }
+
       const lineWidth = cellSize / 5;
       const headSize = cellSize / 1.9;
       const tipOffset = headSize * Math.cos(Math.PI / 5.9);
@@ -121,63 +141,51 @@ export function ArrowProvider({
         ctx.fill();
       }
     },
-    []
+    [cellSize]
   );
 
   const mouseDown = useCallback((initial: Coordinate) => {
     initialState.current = initial;
-  },[]);
+  }, []);
 
   const mouseUp = useCallback(
-    (last: Coordinate, color:string = "rgba(0,0,0, .6)" ) => {
+    (last: Coordinate, color?: string) => {
       const initial = initialState.current;
       const arrow = arrowCanvas.current;
       if (!initial || !arrow) return;
-      if (initial.x === last.x && initial.y === last.y) return;
-      const from = {
-        px: initial.x * cellSize + cellSize / 2,
-        py: initial.y * cellSize + cellSize / 2,
-      };
-      const to = {
-        px: last.x * cellSize + cellSize / 2,
-        py: last.y * cellSize + cellSize / 2,
-      };
 
-      const ctx = arrow.getContext("2d");
-      if (!ctx) return;
-
-      const dx = Math.abs(last.x - initial.x);
-      const dy = Math.abs(last.y - initial.y);
-
-      let withCurve = false;
-      if ((dx === 2 && dy === 1) || (dx === 1 && dy === 2)) {
-        withCurve = true;
-      }
-
-      drawArrow({ ctx, from, to, withCurve, cellSize, color });
+      drawArrow({ initial, last, arrow, color });
     },
-    [cellSize, drawArrow]
+    [drawArrow]
   );
 
-  const clearArrow = useCallback(() => {}, []);
+  const clearArrow = useCallback(() => { }, []);
 
   const clearAllArrows = useCallback(() => {
-      const arrow = arrowCanvas.current;
-      if(arrow == null) return;
-      const ctx = arrow.getContext("2d");
-       if (!ctx) return;
-      ctx.clearRect(0, 0, arrow.width, arrow.height);
+    const arrow = arrowCanvas.current;
+    if (arrow == null) return;
+    const ctx = arrow.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, arrow.width, arrow.height);
   }, []);
 
+  useEffect(() => {
+    if (!suggest) return
+    const arrow = arrowCanvas.current;
+    if (arrow == null) return;
+    drawArrow({ initial: suggest.from, last: suggest.to, arrow, color: undefined });
+
+  }, [suggest, drawArrow])
+
   return (
-    <ArrowContext.Provider  value={{ mouseDown, mouseUp, clearAllArrows }}>
+    <ArrowContext.Provider value={{ mouseDown, mouseUp, clearAllArrows }}>
       <canvas
         ref={arrowCanvas}
         width={cellSize * 8}
         height={cellSize * 8}
         className="pointer-events-none inset-0 absolute"
         id="arrow-canvas"
-        ></canvas>
+      ></canvas>
       {children}
     </ArrowContext.Provider>
   );

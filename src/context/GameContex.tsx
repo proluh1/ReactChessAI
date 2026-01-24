@@ -1,16 +1,17 @@
-import {  createContext, useContext, useRef } from "react";
+import { createContext, useContext, useRef } from "react";
 import type Game from "../engine/Game";
 import type { Coordinate } from "../domain/entitites/Piece";
+import type { MoveAnimation  } from "../engine/Game";
 
 export const GameContext = createContext<{
-  previousCoord: () => Coordinate | null;
+  previousMove: () => MoveAnimation[] | undefined;
   markDrop: () => void;
   consumeDrop: () => boolean;
   onMove: (id: string, to: Coordinate) => void;
   startGame: () => void;
 }>({
-  previousCoord: () => null,
-  markDrop: () => {},
+  previousMove: () => undefined,
+  markDrop: () => { },
   consumeDrop: () => false,
   onMove: () => undefined,
   startGame: () => undefined
@@ -35,17 +36,15 @@ export default function GameProvider({
 
   const consumeDrop = () => {
     const value = dropRef.current;
-    dropRef.current = false; 
+    dropRef.current = false;
     return value;
   };
 
-  const previousCoord = () =>
-    game && game.movesHistory.length
-      ? game.movesHistory.at(-1)!.from
-      : null;
+  const previousMove = () => game?.lastMoveAnimation;
+  
 
   return (
-    <GameContext.Provider value={{ previousCoord, markDrop, consumeDrop, onMove, startGame }}>
+    <GameContext.Provider value={{ previousMove, markDrop, consumeDrop, onMove, startGame }}>
       {children}
     </GameContext.Provider>
   );

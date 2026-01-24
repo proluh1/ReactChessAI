@@ -29,6 +29,7 @@ export default class Piece {
     this.box = targetBox;
   }
 
+
   public isLegalMove(
     newC: Coordinate
   ): { type: MoveType; target?: Piece } | null {

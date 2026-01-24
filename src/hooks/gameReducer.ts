@@ -1,8 +1,8 @@
-import  BoardBuilder  from "../engine/BoardBuilder";
+import BoardBuilder from "../engine/BoardBuilder";
 import HumanPlayer from "../engine/controller/HumanPlayer";
 import { GameAction, GameState, PvMode } from "../engine/Game";
 import Game from "../engine/Game";
-import { Color, MoveType } from "../domain/entitites/Piece";
+import { Color, MoveType, type Coordinate } from "../domain/entitites/Piece";
 import AIPlayer from "../engine/controller/AIPlayer";
 import { defaultFen } from "../config/defaultFen.json";
 import type Board from "../domain/entitites/Board";
@@ -13,12 +13,12 @@ export type GameProps = {
   lastMoveType: MoveType | null;
   mode: PvMode | null;
   gameState: GameState;
+  bestMove: {from: Coordinate, to: Coordinate} | null
 };
 
-export default function gameReducer(state: GameProps, action: any): GameProps {
+export default  function gameReducer(state: GameProps, action: any): GameProps {
   switch (action.type) {
     case GameAction.START: {
-      state.gameState = GameState.PLAYING;
       const board = BoardBuilder.fen(defaultFen).build();
       let game: Game;
       switch (state.mode) {
@@ -31,18 +31,14 @@ export default function gameReducer(state: GameProps, action: any): GameProps {
           );
           break;
         case PvMode.IA: {
-          const humanIsWhite = Math.random() > 0.5;
-          const human = new HumanPlayer(
-            humanIsWhite ? Color.WHITE : Color.BLACK
-          );
-          const ai = new AIPlayer(humanIsWhite ? Color.BLACK : Color.WHITE);
+          const human = new HumanPlayer(Color.WHITE);
+          const ai = new AIPlayer(Color.BLACK);
           game = new Game(
             board,
-            human.color === Color.WHITE ? human : ai,
-            human.color === Color.BLACK ? human : ai,
+            human,
+            ai,
             state.mode
           );
-          game.currentPLayer = human;
           break;
         }
         default:
@@ -50,6 +46,7 @@ export default function gameReducer(state: GameProps, action: any): GameProps {
       }
       return {
         ...state,
+        gameState: GameState.PLAYING,
         game,
         board
       };
@@ -88,6 +85,29 @@ export default function gameReducer(state: GameProps, action: any): GameProps {
         board: newGame.getBoard(),
         lastMoveType: result.lastMoveType,
       };
+    }
+    case GameAction.UNDO_MOVE: {
+      const game = state.game;
+      if (!game || !state.board || game.mode === PvMode.ONLINE) return state;
+      const result = game.undoMove();
+      if (!result.success) return state;
+
+      if (game.mode === PvMode.IA && (game.getCurrentPlayerTurn() instanceof AIPlayer)) game.undoMove();
+
+      const newGame = game.clone();
+
+      return {
+        ...state,
+        game: newGame,
+        board: newGame.getBoard(),
+      };
+    }
+    case GameAction.SHOW_BEST_MOVE: {
+
+      return {
+        ...state,
+        bestMove: action.bestMove
+      }
     }
     default:
       return state;

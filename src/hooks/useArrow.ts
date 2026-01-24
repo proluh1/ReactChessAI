@@ -20,7 +20,7 @@ export default function useArrow(props: Coordinate) {
       if (event.button !== 2) {
         return;
       }
-      let color = '';
+      let color;
       if (event.ctrlKey) {
         color = "rgba(255,0,0, .6)";
       }

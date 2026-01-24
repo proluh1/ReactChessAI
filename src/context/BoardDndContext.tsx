@@ -1,5 +1,5 @@
 import { DndContext, DragOverlay } from "@dnd-kit/core";
-import { useContext, useState } from "react";
+import {  useState } from "react";
 import type Piece from "../domain/entitites/Piece";
 import { useGameContext } from "./GameContex";
 import type { Coordinate } from "../domain/entitites/Piece";
@@ -16,7 +16,7 @@ export default function BoardDndProvider({children} : {children : React.ReactNod
         setActivePiece(null);
         if (over && over.data.current && over.data.current) {
           markDrop();
-          onMove(active.id as string, over.data.current.coordinate);
+          onMove(active.id as string, over.data.current.coordinate as Coordinate);
         }
       }}
     >{children}

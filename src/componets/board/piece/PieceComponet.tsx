@@ -1,4 +1,4 @@
-import { memo, useRef, useContext, useLayoutEffect } from "react";
+import { memo, useRef, useLayoutEffect } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import type Piece from "../../../domain/entitites/Piece";
 import { useGameContext } from "../../../context/GameContex";
@@ -18,7 +18,7 @@ const PieceComponent = memo(
   }) => {
     const imgRef = useRef<HTMLDivElement>(null);
     const rotation = flipped ? "rotate(180deg)" : "";
-    const { previousCoord, consumeDrop } = useGameContext();
+    const { previousMove, consumeDrop } = useGameContext();
     const { handleMouseDown } = useArrow(piece.box?.coordinate as Coordinate);
 
     const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -27,29 +27,38 @@ const PieceComponent = memo(
     });
 
     useLayoutEffect(() => {
-      if (!piece.box || !imgRef.current) return;
-
-      const prevCoord = previousCoord();
-      if (!prevCoord) return;
-
-      const curr = piece.box.coordinate;
+      const curr = piece.box?.coordinate;
+      const img = imgRef.current
+      if (!curr || img === null) return;
 
       const wasDrop = consumeDrop();
       if (wasDrop) return;
-      const dx = (prevCoord.x - curr.x) * size;
-      const dy = (prevCoord.y - curr.y) * size;
 
-      imgRef.current.animate(
-        [
-          { transform: `translate(${dx}px, ${dy}px)` },
-          { transform: "translate(0px, 0px)" },
-        ],
-        {
-          duration: 200,
-          easing: "ease-out",
-        }
-      );
-    }, [piece.box]);
+      const lastMoves = previousMove();
+
+      if (lastMoves === undefined) return;
+
+      lastMoves.forEach((lastMove) => {
+        if (lastMove.id !== piece.id) return;
+
+        const prevCoord = lastMove.from;
+        const dx = (prevCoord.x - curr.x) * size;
+        const dy = (prevCoord.y - curr.y) * size;
+
+        img.animate(
+          [
+            { transform: `translate(${dx}px, ${dy}px)` },
+            { transform: "translate(0px, 0px)" },
+          ],
+          {
+            duration: 200,
+            easing: "ease-out",
+          }
+        );
+      })
+
+
+    }, [piece.box?.coordinate]);
 
     return (
       <div className="w-full h-full" style={{ transform: rotation }}>

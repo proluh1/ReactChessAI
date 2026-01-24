@@ -5,9 +5,9 @@ import stockfish from "../../services/stockfishService";
 import type { PlayerController } from "./PlayerController";
 
 export default class AIPlayer implements PlayerController {
-  public color: Color;
-  constructor(color: Color) {
-    this.color = color;
+  public color!: Color;
+  constructor(color?: Color) {
+    if(color) this.color = color;
   }
 
   async getMove(

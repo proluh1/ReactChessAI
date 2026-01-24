@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useState } from "react";
-import  BoardBuilder  from "../engine/BoardBuilder";
+import BoardBuilder from "../engine/BoardBuilder";
 import { GameAction, GameState, PvMode } from "../engine/Game";
 import { type Coordinate } from "../domain/entitites/Piece";
 import gameReducer from "./gameReducer";
@@ -12,7 +12,8 @@ export function useGame() {
     board: BoardBuilder.fen(defaultFen).build(),
     lastMoveType: null,
     mode: PvMode.LOCAL,
-    gameState: GameState.IDLE
+    gameState: GameState.IDLE,
+    bestMove: null
   });
   const [isThinking, setIsThinking] = useState(false);
 
@@ -20,15 +21,28 @@ export function useGame() {
     dispatch({ type: GameAction.START });
   };
 
-  const selectMode = (mode:PvMode) => {
-      dispatch({ type: GameAction.SELECT_MODE, mode });
+  const selectMode = (mode: PvMode) => {
+    dispatch({ type: GameAction.SELECT_MODE, mode });
+  }
+
+  const undoMove = () => {
+    dispatch({ type: GameAction.UNDO_MOVE });
+  }
+
+  const showBestMove = () => {
+    if (isThinking) {
+      return
+    }
+    new AIPlayer().getMove(state.board, 15).then((bestMove) => { dispatch({ type: GameAction.SHOW_BEST_MOVE, bestMove }); }).finally(()=> setIsThinking(false));
+    setIsThinking(true);
+
   }
 
   const handleMove = (id: string, to: Coordinate) => {
-    if(isThinking) {
+    if (isThinking) {
       return
     }
-    if(state.game === null) {
+    if (state.game === null) {
       startGame();
     }
     dispatch({ type: GameAction.MOVE, id, to });
@@ -37,6 +51,7 @@ export function useGame() {
   const handleMoveIA = (from: Coordinate, to: Coordinate) => {
     dispatch({ type: GameAction.MOVE_IA, from, to });
   };
+
 
   useEffect(() => {
     const { game } = state;
@@ -67,5 +82,7 @@ export function useGame() {
     selectMode,
     handleMoveIA,
     handleMove,
+    undoMove,
+    showBestMove,
   };
 }

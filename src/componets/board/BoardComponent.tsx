@@ -3,20 +3,21 @@ import Board from "../../domain/entitites/Board";
 import indexToColor from "../../utils/color";
 import type { Color, Coordinate } from "../../domain/entitites/Piece";
 import BoxComponent from "./BoxComponent";
-import { useContext, useRef } from "react";
+import {  useRef } from "react";
 import BoardDndProvider from "../../context/BoardDndContext";
 import useCellSize from "../../hooks/useCellSize";
-import { ArrowContext, ArrowProvider } from "../../context/ArrowContext";
-import BoardWrapper from "./BoardWrapper";
+import { ArrowProvider } from "../../context/ArrowContext";
 
 function BoardComponent({
   board,
   className,
   toogleBoard,
+  bestMove
 }: {
   board: Board;
   className?: string;
   toogleBoard: boolean;
+  bestMove: {from: Coordinate, to: Coordinate} | null
 }) {
   const boxComponentWrapper = useRef<HTMLDivElement | null>(null);
   const { cellSize } = useCellSize(boxComponentWrapper);
@@ -31,7 +32,7 @@ function BoardComponent({
       style={{ transform: toogleBoard ? "rotate(180deg)" : "" }}
     >
       <BoardDndProvider>
-        <ArrowProvider cellSize={cellSize}>
+        <ArrowProvider suggest={bestMove} cellSize={cellSize}>
           {board.boxes.map((boxsRow, row) =>
             boxsRow.map((box, col) => {
               const hasSearch = box.piece;
