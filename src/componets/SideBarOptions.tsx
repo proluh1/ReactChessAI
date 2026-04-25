@@ -23,7 +23,7 @@ export default function SideBar({
 
   return (
     <nav className={className}>
-      <div className="h-full w-full flex flex-col justify-start p-4 bg-black">
+      <div className="h-full w-full flex flex-col justify-start p-4 bg-light-black">
         <img
           src="/ReactChessAI-logo.png"
           className="object-contain w-[120px] mt-5 mb-8"

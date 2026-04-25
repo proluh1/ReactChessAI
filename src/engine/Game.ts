@@ -54,7 +54,6 @@ export default class Game {
     const piece = pieces.find((p) => p.id === pieceId);
     if (!piece || !this.isCurrentTurn(piece.color))
       return { success: false, lastMoveType: null };
-
     return this.executeMove(piece, to);
   }
 
@@ -137,8 +136,8 @@ export default class Game {
     return { x: 3, y: kingFrom.y };
   }
 
-  public undoMove(): { success: boolean } {
-    const lastMove = this.movesHistory.pop();
+  public undoMove(): { success: boolean, lastMoveType?: MoveType } {
+    const lastMove = this.movesHistory.slice(-1)[0];
     if (lastMove === undefined) return { success: false };
 
     const { piece, from, to, moveType, capturedPiece, secondaryMove } = lastMove;
@@ -173,7 +172,7 @@ export default class Game {
     }
     this.board.halfMoveClock--;
 
-    return { success: true };
+    return { success: true, lastMoveType: moveType };
   }
 
   private undo(type: MoveType, content: { piece: Piece; from: Coordinate; target?: Piece; secondaryMove?: SecondaryMove }) {
@@ -198,6 +197,7 @@ export default class Game {
     if (piece instanceof Pawn) {
       piece.isDoubleMoveAvailable = true;
     }
+     this.undo_historyMove();
   }
 
   private undo_moveDouble({ piece, from }: { piece: Piece; from: Coordinate }) {
@@ -210,6 +210,7 @@ export default class Game {
       piece.justDoubleMoved = false;
       piece.isDoubleMoveAvailable = true;
     }
+     this.undo_historyMove();
   }
 
   private undo_moveCapture({ piece, from, target }: { piece: Piece; from: Coordinate; target?: Piece }) {
@@ -218,6 +219,7 @@ export default class Game {
     piece.move(from, this.board);
     box.piece = target;
     target.box = box;
+     this.undo_historyMove();
   }
 
   private undo_moveEnPassant({ piece, from, target }: { piece: Piece; from: Coordinate; target?: Piece }) {
@@ -227,6 +229,7 @@ export default class Game {
     box.piece = target;
     target.box = box;
     this.board.halfMoveClock = 0;
+     this.undo_historyMove();
   }
 
   private undo_movePromotion({ piece, from }: { piece: Piece; from: Coordinate }) {
@@ -236,6 +239,7 @@ export default class Game {
     targetBox.setPiece(piece);
     piece.box = targetBox;
     this.board.halfMoveClock = 0;
+     this.undo_historyMove();
   }
 
   private undo_moveCastling({ piece, from, secondaryMove }: { piece: Piece; from: Coordinate; secondaryMove?: SecondaryMove }) {
@@ -256,6 +260,13 @@ export default class Game {
     if (piece instanceof King) {
       piece.castle.kingSide = true;
       piece.castle.queenSide = true;
+    }
+    this.undo_historyMove();
+  }
+
+  private undo_historyMove() {
+    if(this.movesHistory.length > 0) {
+      this.movesHistory.pop();
     }
   }
 
@@ -388,7 +399,7 @@ export default class Game {
       this.players.black,
       this.mode
     );
-    newGame.movesHistory = this.movesHistory;
+    newGame.movesHistory = this.movesHistory.map((move) => ({ ...move }));
     newGame.winner = this.winner;
     newGame.capturePieces = this.capturePieces;
     newGame.lastMoveAnimation = this.lastMoveAnimation;

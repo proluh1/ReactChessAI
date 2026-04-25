@@ -27,6 +27,9 @@ export function useGame() {
 
   const undoMove = () => {
     dispatch({ type: GameAction.UNDO_MOVE });
+    if(state.mode == PvMode.IA) {
+      setTimeout(() => dispatch({ type: GameAction.UNDO_MOVE }), 400);
+    }
   }
 
   const showBestMove = () => {
@@ -34,7 +37,6 @@ export function useGame() {
       return
     }
     new AIPlayer().getMove(state.board, 15).then((bestMove) => { dispatch({ type: GameAction.SHOW_BEST_MOVE, bestMove }); }).finally(()=> setIsThinking(false));
-    setIsThinking(true);
 
   }
 
@@ -42,9 +44,11 @@ export function useGame() {
     if (isThinking) {
       return
     }
+    
     if (state.game === null) {
       startGame();
     }
+
     dispatch({ type: GameAction.MOVE, id, to });
   };
 

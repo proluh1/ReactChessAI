@@ -10,13 +10,13 @@ import type Board from "../domain/entitites/Board";
 export type GameProps = {
   game: Game | null;
   board: Board;
-  lastMoveType: MoveType | null;
+  lastMoveType: MoveType | MoveType[] | null;
   mode: PvMode | null;
   gameState: GameState;
-  bestMove: {from: Coordinate, to: Coordinate} | null
+  bestMove: { from: Coordinate; to: Coordinate } | null;
 };
 
-export default  function gameReducer(state: GameProps, action: any): GameProps {
+export default function gameReducer(state: GameProps, action: any): GameProps {
   switch (action.type) {
     case GameAction.START: {
       const board = BoardBuilder.fen(defaultFen).build();
@@ -27,18 +27,13 @@ export default  function gameReducer(state: GameProps, action: any): GameProps {
             board,
             new HumanPlayer(Color.WHITE),
             new HumanPlayer(Color.BLACK),
-            state.mode
+            state.mode,
           );
           break;
         case PvMode.IA: {
           const human = new HumanPlayer(Color.WHITE);
           const ai = new AIPlayer(Color.BLACK);
-          game = new Game(
-            board,
-            human,
-            ai,
-            state.mode
-          );
+          game = new Game(board, human, ai, state.mode);
           break;
         }
         default:
@@ -48,7 +43,7 @@ export default  function gameReducer(state: GameProps, action: any): GameProps {
         ...state,
         gameState: GameState.PLAYING,
         game,
-        board
+        board,
       };
     }
     case GameAction.SELECT_MODE: {
@@ -89,25 +84,23 @@ export default  function gameReducer(state: GameProps, action: any): GameProps {
     case GameAction.UNDO_MOVE: {
       const game = state.game;
       if (!game || !state.board || game.mode === PvMode.ONLINE) return state;
-      const result = game.undoMove();
-      if (!result.success) return state;
-
-      if (game.mode === PvMode.IA && (game.getCurrentPlayerTurn() instanceof AIPlayer)) game.undoMove();
+      const { success, lastMoveType } = game.undoMove();
+      if (!success || lastMoveType === undefined) return state;
 
       const newGame = game.clone();
 
       return {
         ...state,
+        lastMoveType,
         game: newGame,
         board: newGame.getBoard(),
       };
     }
     case GameAction.SHOW_BEST_MOVE: {
-
       return {
         ...state,
-        bestMove: action.bestMove
-      }
+        bestMove: action.bestMove,
+      };
     }
     default:
       return state;

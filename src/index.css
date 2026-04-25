@@ -7,7 +7,8 @@
     --color-focus: rgba(192, 192, 192, 0.678);
     --color-primary: #312E2B;
     --color-secondary: #F5F3F0;
-    --color-black: #262522;
+    --color-light-black: #262522;
+     --color-black: #1b1a18;
 
     --font-primary: "Montserrat", sans-serif;
 }

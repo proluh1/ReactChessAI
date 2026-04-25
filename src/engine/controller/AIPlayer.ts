@@ -25,6 +25,7 @@ export default class AIPlayer implements PlayerController {
     depth: number;
   }): Promise<{ from: Coordinate; to: Coordinate }> {
     const fen = FnBuilder.board(board).build();
+    console.log(fen);
     try {
       const response = await stockfish.getRespone(fen, depth);
       if (response === null) throw new Error("Bad request");
